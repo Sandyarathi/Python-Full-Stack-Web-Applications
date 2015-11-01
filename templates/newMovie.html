@@ -1,0 +1,23 @@
+<html>
+<body>
+	<h1> Add New Movie</h1>
+	<form action = "{{url_for('newMovie', collection_id = collection_id)}}" method = 'POST'>
+		<p>Movie Name : </p>
+		<input type ='text' size = '30' name = 'name'>
+		<p>Movie Director : </p>
+		<input type ='text' size = '30' name = 'director'>
+		<p>Movie Genre: </p>
+		<input type ='text' size = '30' name = 'genre'>
+		<p>Movie Release year: </p>
+		<input type ='text' size = '30' name = 'year'>
+		<p>Movie Description : </p>
+		<input type ='text' size = '100' name = 'description'>
+		<p>Movie Cover Image : </p>
+		<input type ='text' size = '100' name = 'cover_image'>
+		<p>Movie Trailer Link : </p>
+		<input type ='text' size = '100' name = 'trailer_URL'>
+		</br>
+		<input type = 'submit' value='Create'>
+	</form>
+</body>
+</html>
