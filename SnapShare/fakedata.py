@@ -31,7 +31,7 @@ session.commit()
 
 photo1 = Photo(name = "Mariposa Grove",
 	year = "2014",
-	location = "Yosemite"
+	location = "Yosemite",
 	description = "Mariposa Grove during Yosemite trip",
 	image ='https://www.natureflip.com/sites/default/files/photo/yosemite-national-park/yosemite-national-park-mariposa-grove-redwoods.jpg',
 	user = fake_user,
@@ -39,64 +39,25 @@ photo1 = Photo(name = "Mariposa Grove",
 session.add(photo1)
 session.commit()
 
-photo1 = Photo(name = "Mariposa Grove",
+photo2 = Photo(name = "Tunnel view",
 	year = "2014",
-	location = "Yosemite"
-	description = "Mariposa Grove during Yosemite trip",
-	image ='https://www.natureflip.com/sites/default/files/photo/yosemite-national-park/yosemite-national-park-mariposa-grove-redwoods.jpg',
+	location = "Yosemite",
+	description = "Tunnel view during Yosemite trip",
+	image ='https://upload.wikimedia.org/wikipedia/commons/e/ec/1_yosemite_valley_tunnel_view_2010.JPG',
 	user = fake_user,
 	album = album1)
-session.add(photo1)
+session.add(photo2)
 session.commit()
 
-photo3 = Photo(name = "The Imitation Game",
-	director = "Morten Tyldum",
-	genre = "Thriller/Drama",
-	year = "2015",
-	description = "In 1939, newly created British intelligence agency MI6 recruits Cambridge mathematics alumnus Alan Turing (Benedict Cumberbatch) to crack Nazi codes, including Enigma -- which cryptanalysts had thought unbreakable. ",
-	cover_image ='http://t0.gstatic.com/images?q=tbn:ANd9GcQQ5vi9xgRkP0nk5aRn8tcGEGRnOQyM-aAS1ldqfQSi_69V1yfU',
-	trailer_URL = "https://www.youtube.com/watch?v=S5CjKEFb-sM",
+photo3 = Photo(name = "Lake Siskiyou",
+	year = "2014",
+	location = "MtShastha",
+	description = "Lake siskiyou resort",
+	image ='http://media-cdn.tripadvisor.com/media/photo-s/01/99/54/62/plenty-for-kids-to-do.jpg',
 	user = fake_user,
-	album = album1)
+	album = album2)
 session.add(photo3)
 session.commit()
-
-photo4 = Photo(name = "Listen Amaya",
-	director = "Avinash Kumar Singh",
-	genre = "Drama",
-	year = "2013",
-	description = "Listen... Amaya is 2013 Hindi drama film directed by Avinash Kumar Singh, and starring Farooq Shaikh, Deepti Naval and Swara Bhaskar as leads.",
-	cover_image ='http://t3.gstatic.com/images?q=tbn:ANd9GcQID0pAHlSkswJk_0MQhQLD-I7zbkWUVcL5YrkL21Dm6p2oIZPu',
-	trailer_URL = "www.youtube.com/watch?v=RY4xXvvHcdE",
-	user = fake_user,
-	album = album2)
-session.add(photo4)
-session.commit()
-
-photo5 = Photo(name = "Black",
-	director = "Sanjay Leela Bhansali",
-	genre = "Drama/Family",
-	year = "2005",
-	description = "Paul (Dhritiman Chaterji) and Catherine McNally (Shernaz Patel) give birth to their first daughter, Michelle (Rani Mukherji), who can neither hear nor see. ",
-	cover_image ='http://img.hindilinks4u.to/2007/06/Black-2005.jpg',
-	trailer_URL = "https://www.youtube.com/watch?v=Smd_xZHCCzI",
-	user = fake_user,
-	album = album2)
-session.add(photo5)
-session.commit()
-
-photo6 = Photo(name = "Slumdog Millionaire",
-	director = "Danny Boyle",
-	genre = "Drama/Crime",
-	year = "2008",
-	description = "As 18-year-old Jamal Malik (Dev Patel) answers questions on the Indian version of /'Who Wants to Be a Millionaire,/' flashbacks show how he got there.",
-	cover_image ='https://upload.wikimedia.org/wikipedia/en/f/fe/Slumdog_millionaire_ver2.jpg',
-	trailer_URL = "https://www.youtube.com/watch?v=AIzbwV7on6Q",
-	user = fake_user,
-	album = album2)
-session.add(photo6)
-session.commit()
-
 
 
 
