@@ -1,5 +1,6 @@
 # StoreCatalog
-```SnapShare : Photo sharing Application
+```
+SnapShare : Photo sharing Application
 A data driven Web Application that displays photos shared by different users allows authenticated users to manage the photos.
 Initial steps:
 Install Vagrant and VirtualBox
