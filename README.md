@@ -16,7 +16,9 @@ Initial steps:
     
 Database Setup:
 ---------------
+  Remove existing .db file if any using command: $rm PhotoCollections.db
   $python Albumsdatabase_setup.py
+  $python fakedata.py
   
 Run Application:
 ----------------

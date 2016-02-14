@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, redirect,jsonify, url_for, fl
 app = Flask(__name__)
 
 
-import datetime
+from datetime import datetime
+from datetime import timedelta
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from Albumsdatabase_setup import Base, Album, Photo
+from puppies_dbSetup import Base, Shelter, Puppy, User
 
 # imports for google oauth
 from flask import session as login_session
@@ -16,18 +17,19 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from functools import wraps
 
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "SnapShare"
+APPLICATION_NAME = "PuppiesShelter"
 
 #Connect to Database and create database session
-engine = create_engine('sqlite:///PhotoCollections.db')
+engine = create_engine('sqlite:///puppyshelter.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
-@app.route('/SnapShare/login')
+@app.route('/PuppiesShelter/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
@@ -36,7 +38,7 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
-@app.route('/SnapShare/gconnect', methods=['POST'])
+@app.route('/PuppiesShelter/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
     if request.args.get('state') != login_session['state']:
@@ -116,12 +118,12 @@ def gconnect():
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
-    newUser = User(name= login_session['username'], id=login_session['user_id'], email= login_session['email'],imageURL =login_session['picture'])
+    newUser = User(name= login_session['username'], email= login_session['email'],imageURL =login_session['picture'])
     session.add(newUser)
     session.commit()
     return output
 
-@app.route('/SnapShare/gdisconnect')
+@app.route('/PuppiesShelter/gdisconnect')
 def gdisconnect():
     credentials = login_session.get('credentials')
     if credentials is None:
@@ -156,145 +158,161 @@ def login_required(func):
   @wraps(func)
   def function_wrapper(*args, **kwargs):
     if 'username' not in login_session:
-      flash('Please login to add or edit photos.')
+      flash('Please login to add or edit puppies.')
       return redirect(url_for('showCatalog'))
     return func(*args, **kwargs)
   return function_wrapper
 
 
-# To show home page albums & photos
-@app.route('/SnapShare', methods = ['GET'])
-@app.route('/SnapShare/catalog/', methods = ['GET'])
+# To show home page shelters & puppies
+@app.route('/PuppiesShelter', methods = ['GET'])
+@app.route('/PuppiesShelter/catalog/', methods = ['GET'])
 def showCatalog():
   print "in show catalog"
-  albums = session.query(Album).order_by(asc(Album.name))
-  photos = session.query(Photo).order_by(asc(Photo.year))
-  #return render_template('catalog.html', albums=albums, photos = photos)
-  return jsonify(Albums =[a.serialize for a in albums], Photos = [p.serialize for p in photos])
+  shelters = session.query(Shelter).order_by(asc(Shelter.name))
+  sixMonthsAgo = datetime.now() - timedelta(weeks=12)
+  puppies = session.query(Puppy).filter(Puppy.dateOfBirth > sixMonthsAgo).order_by("dateOfBirth desc")
+  #return render_template('catalog.html', shelters=shelters, puppies = puppies)
+  return jsonify(Shelters =[a.serialize for a in shelters], Puppies = [p.serialize for p in puppies])
 
-#To Show a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/',methods = ['GET'])
-@app.route('/SnapShare/catalog/album/<int:album_id>/photos/', methods = ['GET'])
-def showAlbumAllPhotos(album_id):
-    album = session.query(Album).filter_by(id = album_id).one()
-    photos = session.query(Photo).filter_by(album_id = album_id).all()
-    #return render_template('viewAlbumPhotos.html', album=album, photos= photos)
-    return jsonify(Photos=[i.serialize for i in photos])
+#To Show a shelter
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/',methods = ['GET'])
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppies/', methods = ['GET'])
+def showShelterAllPuppies(shelter_id):
+    shelter = session.query(Shelter).filter_by(id = shelter_id).one()
+    puppies = session.query(Puppy).filter_by(shelter_id = shelter_id).all()
+    #return render_template('viewShelterPuppys.html', shelter=shelter, puppies= puppies)
+    return jsonify(Puppies=[i.serialize for i in puppies])
 
-#View a photo description
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/', methods = ['GET'])
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/description/', methods = ['GET'])
-def showPhotoDescription(album_id,photo_id):
-  photo = session.query(Photo).filter_by(id = photo_id).one()
-  #return render_template('viewPhotoDescription.html', photo=photo)
-  return jsonify(Photo = photo.serialize)
+#View a puppy description
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/', methods = ['GET'])
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/description/', methods = ['GET'])
+def showPuppyDescription(shelter_id,puppy_id):
+  puppy = session.query(Puppy).filter_by(id = puppy_id).one()
+  #return render_template('viewPuppyDescription.html', puppy=puppy)
+  return jsonify(Puppy = puppy.serialize)
 
 
-#Create a new album
-@app.route('/SnapShare/catalog/album/new/', methods = ['POST'])
+#Create a new shelter
+@app.route('/PuppiesShelter/catalog/shelter/new/', methods = ['POST'])
 @login_required
-def newAlbum():
+def newShelter():
   if request.method == 'POST':
     if not ('name' in request.json):
       response = jsonify({'result': 'ERROR'})
       response.status_code = 400
       return response
     else:
-      newCol = Album(name= request.json['name'], user_id=login_session['user_id'])
+      newCol = Shelter(name= request.json['name'],
+        address = request.json['address'],
+        city = request.json['city'],
+        state = request.json['state'],
+        zipCode = request.json['zipCode'],
+        website = request.json['website'],
+        maxCapacity = request.json['maxCapacity'],
+        owner_id=login_session['user_id'])
       session.add(newCol)
       session.commit()
-      flash("New Album Added!")
-      return jsonify(NewAlbum = newCol.serialize)
+      flash("New Shelter Added!")
+      return jsonify(NewShelter = newCol.serialize)
 
-#Edit a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/edit/', methods=['GET','POST'])
+#Edit a shelter
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/edit/', methods=['GET','POST'])
 @login_required
-def editAlbum(album_id):
-  editedAlbum = session.query(Album).filter_by(id = album_id).one()
-  if editedAlbum.user_id != login_session['user_id']:
+def editShelter(shelter_id):
+  editedShelter = session.query(Shelter).filter_by(id = shelter_id).one()
+  if editedShelter.owner_id != login_session['user_id']:
     return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this collection. Please create your own collection in"
-                " order to edit.');}</script><body onload='myFunction()'>")
+                "to edit this collection.');}</script><body onload='myFunction()'>")
   if request.method == 'POST':
     if ('name' in request.json):
-      editedAlbum.name = request.json['name']
-      session.add(editedAlbum)
-      session.commit()
-      return jsonify(EditedAlbum = editedAlbum.serialize)
-    else:
-      return jsonify(EditedAlbum = editedAlbum.serialize)
+      editedShelter.name = request.json['name']
+    if('address' in request.json):
+      editedShelter.address = request.json['address']
+    if('city' in request.json):
+      editedShelter.city = request.json['city']
+    if('state' in request.json):
+      editedShelter.state = request.json['state']
+    if('zipCode' in request.json):
+      editedShelter.zipCode = request.json['zipCode']
+    if('website' in request.json):
+      editedShelter.website = request.json['website']
+    if('maxCapacity' in request.json):
+      editedShelter.maxCapacity = request.json['maxCapacity']
+    session.add(editedShelter)
+    session.commit()
+    return jsonify(EditedShelter = editedShelter.serialize)
 
-#Delete a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/delete/', methods = ['GET','POST'])
+#Delete a shelter
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/delete/', methods = ['GET','POST'])
 @login_required
-def deleteAlbum(album_id):
-  colToDelete = session.query(Album).filter_by(id=album_id).one()
-  if colToDelete.user_id != login_session['user_id']:
+def deleteShelter(shelter_id):
+  colToDelete = session.query(Shelter).filter_by(id=shelter_id).one()
+  if editedShelter.owner_id != login_session['user_id']:
     return ("<script>function myFunction() {alert('You are not authorized "
-            "to delete this collection. Plaease create your own collection"
-            " in order to delete.');}</script><body onload='myFunction()'"
-            ">")
+                "to edit this collection.');}</script><body onload='myFunction()'>")
   if request.method == 'POST':
     session.delete(colToDelete)
     session.commit()
-    return jsonify(DeletedAlbum = colToDelete.serialize)
+    return jsonify(DeletedShelter = colToDelete.serialize)
 
-#Create a new photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/new/', methods = ['GET','POST'])
+#Create a new puppy
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/new/', methods = ['GET','POST'])
 @login_required
-def newPhoto(album_id):
+def newPuppy(shelter_id):
   if 'username' not in login_session:
-        return redirect('/SnapShare/login')
+        return redirect('/PuppiesShelter/login')
   if(request.method == 'POST'):
-    newPhoto = Photo(name = request.json['name'],
-      location = request.json['location'],
-      year = request.json['year'],
-      description = request.json['description'],
-      image = request.json['image'],
-      album_id=album_id,
-      user_id=login_session['user_id'])
-    session.add(newPhoto)
+    newPuppy = Puppy(name = request.json['name'],
+      gender = request.json['gender'],
+      dateOfBirth = request.json['dateOfBirth'],
+      breed = request.json['breed'],
+      picture = request.json['picture'],
+      shelter_id=shelter_id,
+      weight=request.json['weight'])
+    session.add(newPuppy)
     session.commit()
-    return jsonify(NewPhoto = newPhoto.serialize)
+    return jsonify(NewPuppy = newPuppy.serialize)
 
-#Edit an photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/edit/', methods =['GET','POST'])
+#Edit an puppy
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/edit/', methods =['GET','POST'])
 @login_required
-def editPhoto(album_id,photo_id):
-  editedPhoto = session.query(Photo).filter_by(id=photo_id).one()
-  if editedPhoto.user_id != login_session['user_id']:
+def editPuppy(shelter_id,puppy_id):
+  editedPuppy = session.query(Puppy).filter_by(id=puppy_id).one()
+  shelter = session.query(Shelter).filter_by(id=shelter_id).one()
+  if shelter.owner_id!= login_session['user_id']:
     return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this photo. Please add your own photo in"
-                " order to edit.');}</script><body onload='myFunction()'>")
+                "to edit this record.');}</script><body onload='myFunction()'>")
   if(request.method == 'POST'):
     if 'name' in request.json:
-      editedPhoto.name = request.json['name']
-    if 'location' in request.json:
-      editedPhoto.director = request.json['location']
-    if 'year' in request.json:
-      editedPhoto.year = request.json['year']
-    if 'description' in request.json:
-      editedPhoto.description= request.json['description']
-    if 'image' in request.json:
-      editedPhoto.cover_image = request.json['image']
-    session.add(editedPhoto)
+      editedPuppy.name = request.json['name']
+    if 'gender' in request.json:
+      editedPuppy.gender = request.json['gender']
+    if 'dateOfBirth' in request.json:
+      editedPuppy.dateOfBirth = request.json['dateOfBirth']
+    if 'breed' in request.json:
+      editedPuppy.breed= request.json['breed']
+    if 'picture' in request.json:
+      editedPuppy.picture = request.json['picture']
+    if 'weight' in request.json:
+      editedPuppy.weight = request.json['weight']
+    session.add(editedPuppy)
     session.commit()
-    return jsonify(EditedPhoto = editedPhoto.serialize)
+    return jsonify(EditedPuppy = editedPuppy.serialize)
 
-#Delete an photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/delete/', methods =['GET','POST'])
+#Delete an puppy
+@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/delete/', methods =['GET','POST'])
 @login_required
-def deletePhoto(album_id, photo_id):
-  photoToDelete = session.query(Photo).filter_by(id=photo_id).one()
-  if photoToDelete.user_id != login_session['user_id']:
-      return ("<script>function myFunction() {alert('You are not authorized "
-                "to delete this photo. Please delete from your own "
-                " collection.');}</script><body onload='myFunction()'"
-                ">")
+def deletePuppy(shelter_id, puppy_id):
+  puppyToDelete = session.query(Puppy).filter_by(id=puppy_id).one()
+  shelter = session.query(Shelter).filter_by(id=shelter_id).one()
+  if shelter.owner_id!= login_session['user_id']:
+    return ("<script>function myFunction() {alert('You are not authorized "
+                "to delete this record.');}</script><body onload='myFunction()'>")
   if request.method == 'POST':
-      session.delete(photoToDelete)
+      session.delete(puppyToDelete)
       session.commit()
-      return jsonify(DeletedPhoto = photoToDelete.serialize)
+      return jsonify(DeletedPuppy = puppyToDelete.serialize)
 
 
 

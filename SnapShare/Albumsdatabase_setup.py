@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -19,7 +19,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
-    imageURL = Column(String(250))
+    imageURL = Column(String())
 
 class Album(Base):
     __tablename__ = 'album'
@@ -60,6 +60,8 @@ class Photo(Base):
         year: Year in which the photo was shared.
         location: Location where the photo was taken.
         description: Additional photo information.
+        created_on:Image upload date
+        edited_on:Image edit date
         image: filename or external path to the image file.
         user_id: user who uploaded the photo.
         album_id : album name it belongs to
@@ -71,6 +73,8 @@ class Photo(Base):
     location = Column(String(250))
     description = Column(String(250))
     image = Column(String(250))
+    created_on:Column(TIMESTAMP)
+    edited_on:Column(TIMESTAMP)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
     album_id = Column(Integer, ForeignKey('album.id'))
@@ -92,7 +96,9 @@ class Photo(Base):
             'location': self.location,
             'description': self.description,
             'image': self.image,
-            'user':self.user_id,
+            'created_on':self.created_on,
+            'edited_on':self.edited_on,
+            'owner':self.user_id,
             'album':self.album_id
             
         }

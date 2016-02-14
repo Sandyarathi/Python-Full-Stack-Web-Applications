@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
  
@@ -21,6 +22,7 @@ session = DBSession()
 fake_user = User(name = "Sandyarathi", email = "sandyasoumya@gmail.com", imageURL = "https://www.facebook.com/photo.php?fbid=512387765601281&set=a.104421169731278.8509.100004901858250&type=3&theater")
 
 album1 = Album(name = "Yosemite", user = fake_user)
+
 session.add(album1)
 session.commit()
 
@@ -34,6 +36,8 @@ photo1 = Photo(name = "Mariposa Grove",
 	location = "Yosemite",
 	description = "Mariposa Grove during Yosemite trip",
 	image ='https://www.natureflip.com/sites/default/files/photo/yosemite-national-park/yosemite-national-park-mariposa-grove-redwoods.jpg',
+	created_on=datetime.datetime.now(),
+    edited_on=datetime.datetime.now(),
 	user = fake_user,
 	album = album1)
 session.add(photo1)
@@ -44,6 +48,8 @@ photo2 = Photo(name = "Tunnel view",
 	location = "Yosemite",
 	description = "Tunnel view during Yosemite trip",
 	image ='https://upload.wikimedia.org/wikipedia/commons/e/ec/1_yosemite_valley_tunnel_view_2010.JPG',
+	created_on=datetime.datetime.now(),
+    edited_on=datetime.datetime.now(),
 	user = fake_user,
 	album = album1)
 session.add(photo2)
@@ -54,6 +60,8 @@ photo3 = Photo(name = "Lake Siskiyou",
 	location = "MtShastha",
 	description = "Lake siskiyou resort",
 	image ='http://media-cdn.tripadvisor.com/media/photo-s/01/99/54/62/plenty-for-kids-to-do.jpg',
+	created_on=datetime.datetime.now(),
+    edited_on=datetime.datetime.now(),
 	user = fake_user,
 	album = album2)
 session.add(photo3)
