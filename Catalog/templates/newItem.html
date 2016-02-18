@@ -1,0 +1,15 @@
+<html>
+<body>
+	<h1> Add New Item</h1>
+	<form action = "{{url_for('newItem', category_id = category_id)}}" method = 'POST'>
+		<p>Item Name : </p>
+		<input type ='text' size = '30' name = 'name'>
+		<p>Item Description : </p>
+		<input type ='text' size = '100' name = 'description'>
+		<p>Image URL: </p>
+		<input type ='text' size = '100' name = 'imageURL'>
+		</br>
+		<input type = 'submit' value='Create'>
+	</form>
+</body>
+</html>

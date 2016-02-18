@@ -1,0 +1,487 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"fa",
+				"fake_user"
+			],
+			[
+				"shel",
+				"shelter_owner"
+			],
+			[
+				"c",
+				"currentOccupancy"
+			],
+			[
+				"order",
+				"order_by"
+			],
+			[
+				"g",
+				"getPuppiesLessThanSixMonths"
+			],
+			[
+				"get",
+				"getAllPuppiesInAlphabeticalOrder"
+			],
+			[
+				"date",
+				"dateOfBirth"
+			],
+			[
+				"dat",
+				"dateOfBirth"
+			],
+			[
+				"puppy",
+				"puppy_breeds"
+			],
+			[
+				"pu",
+				"pubby_breeds"
+			],
+			[
+				"cover",
+				"cover_image"
+			],
+			[
+				"movie",
+				"movieToDelete"
+			],
+			[
+				"s",
+				"serialize"
+			],
+			[
+				"__",
+				"__tablename__"
+			],
+			[
+				"trailer",
+				"trailer_URL"
+			],
+			[
+				"vec",
+				"vectorOfFilePaths"
+			],
+			[
+				"S",
+				"SPEED_BUCKETS"
+			],
+			[
+				"process",
+				"processResult"
+			],
+			[
+				"file",
+				"file_names"
+			],
+			[
+				"ve",
+				"veggieBurgers"
+			],
+			[
+				"menu",
+				"MenuItem"
+			],
+			[
+				"create",
+				"create_engine"
+			],
+			[
+				"regis",
+				"registered_players"
+			],
+			[
+				"execute",
+				"execute_query"
+			],
+			[
+				"db",
+				"dbConnection"
+			],
+			[
+				"Forei",
+				"ForeignKey"
+			],
+			[
+				"l",
+				"link	Tag"
+			],
+			[
+				"mystery",
+				"mystery2"
+			],
+			[
+				"in",
+				"index"
+			],
+			[
+				"input",
+				"inputArray"
+			],
+			[
+				"m",
+				"mystery"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/Java/Ant.sublime-build",
+					""
+				],
+				[
+					"Packages/Java/JavaC.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/Java/JavaC.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/sandyarathidas/Desktop/StoreCatalog/PuppyShelter/puppyQueries.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/PuppyShelter/puppies_dbSetup.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/PuppyShelter/templates/login.html",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/PuppyShelter/project.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/PuppyShelter/puppypopulator.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/SnapShare/Albumsdatabase_setup.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/SnapShare/project.py",
+		"/Users/sandyarathidas/Downloads/puppypopulator/puppypopulator.py",
+		"/Users/sandyarathidas/Downloads/puppypopulator/puppies.py",
+		"/Users/sandyarathidas/Desktop/shailesh_javascript/program.html",
+		"/Users/sandyarathidas/Desktop/shailesh_javascript/program.js",
+		"/Users/sandyarathidas/Desktop/core-netty-4.4_shailu/build.xml",
+		"/Users/sandyarathidas/Desktop/core-netty-4.4_shailu/python/roopa-client.py",
+		"/Users/sandyarathidas/Desktop/ClusterConfList.java",
+		"/Users/sandyarathidas/Downloads/JsonUtil.java",
+		"/Users/sandyarathidas/Downloads/cluster (4).conf",
+		"/Users/sandyarathidas/Downloads/ClusterConnectionManager (1).java",
+		"/Users/sandyarathidas/Desktop/core-netty-4.4_shailu/runtime/localMesh/server0.conf",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/generated/poke/core/Mgmt.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/server/managers/ElectionManager.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/server/election/ElectionListener.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/server/election/Election.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/demo/StartElection.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/server/management/client/MgmtClientCommand.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/client/ClientCommand.java",
+		"/Users/sandyarathidas/Desktop/raft-distributed-server-system-master/src/poke/server/election/Raft.java",
+		"/Users/sandyarathidas/Downloads/cluster (1).conf",
+		"/Users/sandyarathidas/Downloads/cluster.conf",
+		"/Users/sandyarathidas/Downloads/ClusterConnectionManager.java",
+		"/Users/sandyarathidas/Downloads/app.proto",
+		"/Users/sandyarathidas/Desktop/mooc/runtime/mesh1/server2.conf",
+		"/Users/sandyarathidas/Downloads/deepdive/codes/simpleht.py",
+		"/Users/sandyarathidas/Downloads/deepdive/codes/distht.py",
+		"/Users/sandyarathidas/Desktop/mooc/runtime/localMesh/startServer.sh",
+		"/Users/sandyarathidas/Desktop/mooc-master/python-client/run.py",
+		"/Users/sandyarathidas/Desktop/mooc-master/python-client/Client.py",
+		"/Users/sandyarathidas/Downloads/ChordNode.java",
+		"/Users/sandyarathidas/Downloads/deepdive/codes/client.py",
+		"/Users/sandyarathidas/Downloads/core-netty-4.4/src/poke/server/election/FloodMaxElection.java",
+		"/Users/sandyarathidas/Downloads/core-netty-4.4/src/poke/server/election/Election.java",
+		"/Users/sandyarathidas/Desktop/mooc/build.xml",
+		"/Users/sandyarathidas/Downloads/catalog-app-master/application.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/SnapShare/fakedata.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/templates/login.html",
+		"/Users/sandyarathidas/Desktop/codeschoolAngular/Gemstore/app.js",
+		"/Users/sandyarathidas/Desktop/codeschoolAngular/Gemstore/index.html",
+		"/Users/sandyarathidas/Downloads/angular.min.js",
+		"/Users/sandyarathidas/Desktop/Add.java",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/project.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/fakedata.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/Moviesdatabase_setup.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/Moviesdatabase_setup.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/controller.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/RestfulCatalog/models.py",
+		"/Users/sandyarathidas/Desktop/StoreCatalog/database_setup.py",
+		"/Users/sandyarathidas/Desktop/Catalog/project.py",
+		"/Users/sandyarathidas/Desktop/FavoriteMoviesWebsite/entertainment_centre.py",
+		"/Users/sandyarathidas/Desktop/Catalog/database_setup.py",
+		"/Users/sandyarathidas/Desktop/WindRosePOC/src_MPI/MP+MPI.cpp",
+		"/Users/sandyarathidas/Desktop/WindRosePOC/src_MPI/MPITaskDivision.cpp",
+		"/Users/sandyarathidas/Desktop/TaskDivision.cpp",
+		"/Users/sandyarathidas/Desktop/WindRosePOC/src_MPI/SerialModified.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/AditiOpenMP/src/example.py",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/Colfax_Tutorial_Binning/Binning.cc",
+		"/Users/sandyarathidas/Downloads/Approach1.cpp",
+		"/Users/sandyarathidas/Downloads/Colfax_Tutorial_Binning/Binning.cc",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/ParallelWindRoseReduce.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/extractdata.java",
+		"/Users/sandyarathidas/Downloads/OAuth2.0-master/templates/restaurants.html",
+		"/Users/sandyarathidas/Downloads/OAuth2.0-master/project.py",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/MultiCSVOpenMP.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/MultiCSV.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/ParallelWindrose.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/ParallelFileReadDemo.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/ParallelFirstDemo.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275/GashWindrose/src/Parallel.cpp",
+		"/Users/sandyarathidas/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/76CFF090-2BE5-4C7B-9B0E-62667053BDA8/Windrose/windroseAlgorithm.cpp",
+		"/Users/sandyarathidas/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/CC1EB7F0-4EE1-4726-B628-28BCB08F74F6/Windrose/windroseAlgorithm.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/windrose.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/dataAggregateFunc.cpp",
+		"/Users/sandyarathidas/Desktop/extractdata.java",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/mesonet/download-mac.sh",
+		"/Users/sandyarathidas/Desktop/dataAggregateFunc.cpp",
+		"/Users/sandyarathidas/Desktop/windrose.cpp",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/project.py",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/application.py",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/load_data.py",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/database_setup.py",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/templates/categories.html",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/templates/home.html",
+		"/Users/sandyarathidas/Desktop/oauth/project.py",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/vagrant/Catalog/templates/login.html",
+		"/Users/sandyarathidas/Desktop/oauth/lotsofmenus.py",
+		"/Users/sandyarathidas/Desktop/oauth/database_setup.py",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/windrose/windrose.py",
+		"/Users/sandyarathidas/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/9D5C4E27-B072-4148-B27C-23579D9FFF33/windrose.cpp",
+		"/Users/sandyarathidas/Desktop/oauth/templates/login.html",
+		"/Users/sandyarathidas/Downloads/ud330-master/Lesson4/step2/templates/login.html",
+		"/Users/sandyarathidas/Desktop/oauth/templates/publicrestaurants.html",
+		"/Users/sandyarathidas/Desktop/oauth/templates/publicmenu.html",
+		"/Users/sandyarathidas/Desktop/oauth/fb_client_secrets.json",
+		"/Users/sandyarathidas/Desktop/oauth/client_secrets.json",
+		"/Users/sandyarathidas/Desktop/frontend-nanodegree-resume/js/resumeBuilder.js",
+		"/Users/sandyarathidas/Desktop/frontend-nanodegree-resume/index.html",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/mesonet/download.sh",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/Project1/mesonet/mesowest_preclean.sh",
+		"/Users/sandyarathidas/Desktop/FacebookMoments-master/src/main/java/Facebook/FController.java",
+		"/Users/sandyarathidas/Downloads/puppypopulator (2)/puppies.py",
+		"/Users/sandyarathidas/Desktop/FSFLesson1/vagrant/PuppiesShelter/database_setup.py",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/matrix/src/matrix-better.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/matrix/src/matrix-parallel.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/matrix/src/matrix.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/pi-parallel-for.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/pi-parallel-critical.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/pi-plain.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/pi-parallel.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/pi-parallel-cache.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/TimTutorial/hello_multi.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/for-for-parallel.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/for-plain.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/for-for.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/for-parallel.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/hello-plain.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/hello-cout.cpp",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/hello/hello-mp.cpp",
+		"/Users/sandyarathidas/Desktop/RestaurantMenu/database_setup.py",
+		"/Users/sandyarathidas/Documents/CMPE275_Sandy/GCC_DotKit_install/build.sh",
+		"/Users/sandyarathidas/Downloads/build.sh"
+	],
+	"find":
+	{
+		"height": 23.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"app_pb2",
+			"movie",
+			"Movie",
+			"collection",
+			"Collection",
+			"Movie",
+			"collection",
+			"Collection",
+			"Movie",
+			"movie",
+			"collection",
+			"movie",
+			"Movie",
+			"movie",
+			"form",
+			"Column",
+			"region",
+			"created",
+			"bookbook",
+			"item",
+			"menu",
+			"Menu_Item",
+			"restaurant",
+			"restaurants",
+			"restaurant",
+			"menuItem",
+			"MenuItem",
+			"Restaurant",
+			"2.2"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"comm_pb2",
+			"photo",
+			"Photo",
+			"album",
+			"Album",
+			"Photo",
+			"photo",
+			"album",
+			"photo",
+			"Photo",
+			"photo",
+			"json",
+			"db.Column",
+			"book",
+			"Books",
+			"category",
+			"categories",
+			"category",
+			"book",
+			"Book",
+			"Category",
+			""
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 100.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "project.sublime-project",
+	"replace":
+	{
+		"height": 42.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 278.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

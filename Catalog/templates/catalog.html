@@ -1,0 +1,32 @@
+<html>
+	<body>
+		<h1>CATALOG</h1>
+		</br>
+		<h2>Categories</h2>
+			{%with messages = get_flashed_messages() %}
+		{% if messages %}
+			<ul>
+			{% for message in messages%}
+				<li> <strong> {{message}} </strong></li>
+			{% endfor %}
+			</ul>
+			{% endif %}
+			{% endwith %}
+			{% for c in categories %}
+			<a href = '{{ url_for('showCategoryAllItems', category_id = c.id)}}'>{{c.name}}</a>
+		</br>
+
+		</br></br>
+			{% endfor %}
+		<h2>Recently Added Items:</h2>
+			{% for i in items%}
+		<img HEIGHT=50 WIDTH=50 src={{i.imageURL}}>
+		</br>
+			<a href = '{{ url_for('showItemDescription',category_id=i.category_id, item_id = i.id)}}'>{{i.name}}</a>
+		</br>
+			{% endfor %}
+
+		</br>
+		<a href= '{{ url_for('newCategory')}}'>Add New Category</a>
+	</body>
+</html>

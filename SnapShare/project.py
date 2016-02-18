@@ -16,6 +16,7 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from functools import wraps
 
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
@@ -27,7 +28,7 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
-@app.route('/SnapShare/login')
+@app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
@@ -36,7 +37,7 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
-@app.route('/SnapShare/gconnect', methods=['POST'])
+@app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
     if request.args.get('state') != login_session['state']:
@@ -107,42 +108,73 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    # see if user exists, if it doesn't make a new one
+    user_id = getUserID(data["email"])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
+    
+    output = ' Successfully logged in!'
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
-    newUser = User(name= login_session['username'], id=login_session['user_id'], email= login_session['email'],imageURL =login_session['picture'])
-    session.add(newUser)
-    session.commit()
     return output
 
-@app.route('/SnapShare/gdisconnect')
+
+# User Helper Functions
+
+
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+
+
+@app.route('/gdisconnect')
 def gdisconnect():
+        # Only disconnect a connected user.
     credentials = login_session.get('credentials')
     if credentials is None:
         response = make_response(
-            json.dumps('Current user is not connected.'), 200)
+            json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    # Execute HTTP GET request to revoke current token.
     access_token = credentials.access_token
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    if result['status'] != '200':
-        response = make_response(
-            json.dumps('Successfully disconnected.'), 200)
+
+    if result['status'] == '200':
+        # Reset the user's sesson.
+        del login_session['credentials']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(
-            json.dumps('Failed to revoke token for given user.'), 400)
+            json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -155,16 +187,16 @@ def login_required(func):
   """
   @wraps(func)
   def function_wrapper(*args, **kwargs):
+    print "in login check"
     if 'username' not in login_session:
-      flash('Please login to add or edit photos.')
-      return redirect(url_for('showCatalog'))
+      flash('Please login to add or edit.')
+      return jsonify(msg='Logging in is required to do this!')
     return func(*args, **kwargs)
   return function_wrapper
 
 
 # To show home page albums & photos
-@app.route('/SnapShare', methods = ['GET'])
-@app.route('/SnapShare/catalog/', methods = ['GET'])
+@app.route('/catalog/', methods = ['GET'])
 def showCatalog():
   print "in show catalog"
   albums = session.query(Album).order_by(asc(Album.name))
@@ -173,128 +205,193 @@ def showCatalog():
   return jsonify(Albums =[a.serialize for a in albums], Photos = [p.serialize for p in photos])
 
 #To Show a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/',methods = ['GET'])
-@app.route('/SnapShare/catalog/album/<int:album_id>/photos/', methods = ['GET'])
+@app.route('/catalog/album/<int:album_id>/',methods = ['GET'])
+@app.route('/catalog/album/<int:album_id>/photos/', methods = ['GET'])
 def showAlbumAllPhotos(album_id):
-    album = session.query(Album).filter_by(id = album_id).one()
-    photos = session.query(Photo).filter_by(album_id = album_id).all()
-    #return render_template('viewAlbumPhotos.html', album=album, photos= photos)
-    return jsonify(Photos=[i.serialize for i in photos])
+  try:
+    album = session.query(Album).filter_by(id = album_id).first()
+    if album:
+      photos = session.query(Photo).filter_by(album_id = album_id).all()
+      if photos != []:
+        #return render_template('viewAlbumPhotos.html', album=album, photos= photos)
+        return jsonify(Photos=[p.serialize for p in photos])
+      else:
+        return jsonify(msg='No photos in this album!')
+    else:
+      return jsonify(msg='Album with this id doesnot exist!')
+  except Exception, e:
+      print str(e)
+      return jsonify(msg = 'Error occured while processsing request!')
 
 #View a photo description
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/', methods = ['GET'])
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/description/', methods = ['GET'])
+@app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/', methods = ['GET'])
+@app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/description/', methods = ['GET'])
 def showPhotoDescription(album_id,photo_id):
-  photo = session.query(Photo).filter_by(id = photo_id).one()
-  #return render_template('viewPhotoDescription.html', photo=photo)
-  return jsonify(Photo = photo.serialize)
+  try:
+    album= session.query(Album).filter_by(id= album_id).first()
+    if album:
+      photo = session.query(Photo).filter_by(id = photo_id).first()
+      if photo:
+        #return render_template('viewPhotoDescription.html', photo=photo)
+        return jsonify(Photo = photo.serialize)
+      else:
+        return jsonify(msg='No photo with this id!')
+    else:
+        return jsonify(msg='No album with this id!')
+  except Exception, e:
+    print str(e)
+    return jsonify(msg = 'Error occured while processsing request!')
+
+
 
 
 #Create a new album
-@app.route('/SnapShare/catalog/album/new/', methods = ['POST'])
+@app.route('/catalog/album/new/', methods = ['POST'])
 @login_required
 def newAlbum():
   if request.method == 'POST':
-    if not ('name' in request.json):
-      response = jsonify({'result': 'ERROR'})
-      response.status_code = 400
-      return response
-    else:
-      newCol = Album(name= request.json['name'], user_id=login_session['user_id'])
+    try:
+      newCol = Album(name= request.json['name'],
+        user_id=login_session['user_id'])
       session.add(newCol)
       session.commit()
       flash("New Album Added!")
-      return jsonify(NewAlbum = newCol.serialize)
-
+      return jsonify(added=True, NewAlbum = newCol.serialize)
+    except Exception, e:
+      print str(e)
+      return jsonify(added = False, msg='Unable to add!')
+  else:
+    return jsonify(added = False, masg='Exited from request method!')
 #Edit a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/edit/', methods=['GET','POST'])
+@app.route('/catalog/album/<int:album_id>/edit/', methods=['GET','POST'])
 @login_required
 def editAlbum(album_id):
-  editedAlbum = session.query(Album).filter_by(id = album_id).one()
-  if editedAlbum.user_id != login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
+  if request.method == 'POST':
+    try:
+      editedAlbum = session.query(Album).filter_by(id = album_id).one()
+      if editedAlbum:
+        if editedAlbum.user_id != login_session['user_id']:
+          return ("<script>function myFunction() {alert('You are not authorized "
                 "to edit this collection. Please create your own collection in"
                 " order to edit.');}</script><body onload='myFunction()'>")
-  if request.method == 'POST':
-    if ('name' in request.json):
-      editedAlbum.name = request.json['name']
-      session.add(editedAlbum)
-      session.commit()
-      return jsonify(EditedAlbum = editedAlbum.serialize)
-    else:
-      return jsonify(EditedAlbum = editedAlbum.serialize)
+          if ('name' in request.json):
+            editedAlbum.name = request.json['name']
+            session.add(editedAlbum)
+            session.commit()
+            return jsonify(updated=True, EditedAlbum = editedAlbum.serialize, msg='Record has been updated!')
+      else:
+        return jsonify(updated=False, msg='No such album exists!')
+    except Exception, e:
+      print str(e)
+      return jsonify(EditedAlbum = editedAlbum.serialize, updated=False, msg='An error occured while trying to update!')
+  else:
+    return jsonify(updated=False, msg='An error occured while updating!')
 
 #Delete a album
-@app.route('/SnapShare/catalog/album/<int:album_id>/delete/', methods = ['GET','POST'])
+@app.route('/catalog/album/<int:album_id>/delete/', methods = ['GET','POST'])
 @login_required
 def deleteAlbum(album_id):
-  colToDelete = session.query(Album).filter_by(id=album_id).one()
-  if colToDelete.user_id != login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-            "to delete this collection. Plaease create your own collection"
-            " in order to delete.');}</script><body onload='myFunction()'"
-            ">")
   if request.method == 'POST':
-    session.delete(colToDelete)
-    session.commit()
-    return jsonify(DeletedAlbum = colToDelete.serialize)
+    try:
+      colToDelete = session.query(Album).filter_by(id=album_id).one()
+      if colToDelete:
+        if colToDelete.user_id != login_session['user_id']:
+          return ("<script>function myFunction() {alert('You are not authorized "
+                "to delete this collection. Plaease create your own collection"
+                " in order to delete.');}</script><body onload='myFunction()'"
+                ">")
+        session.delete(colToDelete)
+        session.commit()
+        return jsonify(deleted=True, msg='Record has been deleted!')
+      else:
+        return jsonify(deleted=False, msg='No such Album exists!')
+    except Exception, e:
+      print str(e)
+      return jsonify(deleted=False, msg='An error occured while trying to delete!')
+  else:
+    return jsonify(deleted=False, msg='An error occured while deleting!')
 
 #Create a new photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/new/', methods = ['GET','POST'])
+@app.route('/catalog/album/<int:album_id>/photo/new/', methods = ['GET','POST'])
 @login_required
 def newPhoto(album_id):
-  if 'username' not in login_session:
-        return redirect('/SnapShare/login')
   if(request.method == 'POST'):
-    newPhoto = Photo(name = request.json['name'],
-      location = request.json['location'],
-      year = request.json['year'],
-      description = request.json['description'],
-      image = request.json['image'],
-      album_id=album_id,
-      user_id=login_session['user_id'])
-    session.add(newPhoto)
-    session.commit()
-    return jsonify(NewPhoto = newPhoto.serialize)
+    try:
+      newPhoto = Photo(name = request.json['name'],
+        location = request.json['location'],
+        year = request.json['year'],
+        description = request.json['description'],
+        image = request.json['image'],
+        album_id=album_id,
+        user_id=login_session['user_id'])
+      session.add(newPhoto)
+      session.commit()
+      return jsonify(added=True, NewPhoto = newPhoto.serialize)
+    except Exception, e:
+      print str(e)
+      return jsonify(added = False)
+  else:
+    return jsonify(added = False)
 
 #Edit an photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/edit/', methods =['GET','POST'])
+@app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/edit/', methods =['GET','POST'])
 @login_required
 def editPhoto(album_id,photo_id):
-  editedPhoto = session.query(Photo).filter_by(id=photo_id).one()
-  if editedPhoto.user_id != login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this photo. Please add your own photo in"
-                " order to edit.');}</script><body onload='myFunction()'>")
   if(request.method == 'POST'):
-    if 'name' in request.json:
-      editedPhoto.name = request.json['name']
-    if 'location' in request.json:
-      editedPhoto.director = request.json['location']
-    if 'year' in request.json:
-      editedPhoto.year = request.json['year']
-    if 'description' in request.json:
-      editedPhoto.description= request.json['description']
-    if 'image' in request.json:
-      editedPhoto.cover_image = request.json['image']
-    session.add(editedPhoto)
-    session.commit()
-    return jsonify(EditedPhoto = editedPhoto.serialize)
+    try:
+      editedPhoto = session.query(Photo).filter_by(id=photo_id).one()
+      if editedPhoto:
+        if editedPhoto.user_id != login_session['user_id']:
+          return ("<script>function myFunction() {alert('You are not authorized "
+                    "to edit this photo. Please add your own photo in"
+                    " order to edit.');}</script><body onload='myFunction()'>")
+        if 'name' in request.json:
+          editedPhoto.name = request.json['name']
+        if 'location' in request.json:
+          editedPhoto.director = request.json['location']
+        if 'year' in request.json:
+          editedPhoto.year = request.json['year']
+        if 'description' in request.json:
+          editedPhoto.description= request.json['description']
+        if 'image' in request.json:
+          editedPhoto.cover_image = request.json['image']
+        session.add(editedPhoto)
+        session.commit()
+        return jsonify(updated = True, EditedPhoto = editedPhoto.serialize, msg='Record updated!')
+      else:
+        return jsonify(updated=False, msg='No such photo exists!')
+    except Exception, e:
+      print str(e)
+      return jsonify(EditedPhoto = editedAlbum.serialize, updated=False, msg='An error occured while trying to update!')
+  else:
+    return jsonify(updated=False, msg='An error occured while updating!')
+
+
 
 #Delete an photo
-@app.route('/SnapShare/catalog/album/<int:album_id>/photo/<int:photo_id>/delete/', methods =['GET','POST'])
+@app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/delete/', methods =['GET','POST'])
 @login_required
 def deletePhoto(album_id, photo_id):
-  photoToDelete = session.query(Photo).filter_by(id=photo_id).one()
-  if photoToDelete.user_id != login_session['user_id']:
-      return ("<script>function myFunction() {alert('You are not authorized "
-                "to delete this photo. Please delete from your own "
-                " collection.');}</script><body onload='myFunction()'"
-                ">")
   if request.method == 'POST':
-      session.delete(photoToDelete)
-      session.commit()
-      return jsonify(DeletedPhoto = photoToDelete.serialize)
+    try:
+      photoToDelete = session.query(Photo).filter_by(id=photo_id).one()
+      if photoToDelete:
+        if photoToDelete.user_id != login_session['user_id']:
+            return ("<script>function myFunction() {alert('You are not authorized "
+                      "to delete this photo. Please delete from your own "
+                      " collection.');}</script><body onload='myFunction()'"
+                      ">")
+        
+        session.delete(photoToDelete)
+        session.commit()
+        return jsonify(deleted=True, DeletedPhoto = photoToDelete.serialize)
+      else:
+        return jsonify(deleted=False, msg='No such Photo exists!')
+    except Exception, e:
+      print str(e)
+      return jsonify(deleted=False, msg='An error occured while trying to delete!')
+  else:
+    return jsonify(deleted=False, msg='An error occured while deleting!')
 
 
 

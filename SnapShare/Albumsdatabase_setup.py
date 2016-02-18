@@ -73,8 +73,8 @@ class Photo(Base):
     location = Column(String(250))
     description = Column(String(250))
     image = Column(String(250))
-    created_on:Column(TIMESTAMP)
-    edited_on:Column(TIMESTAMP)
+    created_on=Column(TIMESTAMP)
+    edited_on=Column(TIMESTAMP)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
     album_id = Column(Integer, ForeignKey('album.id'))
@@ -96,8 +96,8 @@ class Photo(Base):
             'location': self.location,
             'description': self.description,
             'image': self.image,
-            'created_on':self.created_on,
-            'edited_on':self.edited_on,
+            'created_on':str(self.created_on),
+            'edited_on':str(self.edited_on),
             'owner':self.user_id,
             'album':self.album_id
             

@@ -1,0 +1,16 @@
+
+<html>
+	<body>
+		<h1>{{ puppy.name }}</h1>
+		<img HEIGHT=50 WIDTH=50 src={{puppy.image_src}}>
+		</br>
+			{{puppy.gender}}
+			{{puppy.breed}}
+		</br>
+		{{puppy.shelter.name}}
+		</br>
+		<a href= '{{ url_for('editPuppy', puppy_id = puppy.id)}}'>Edit</a>
+		<a href= '{{ url_for('deletePuppy',puppy_id = puppy.id)}}'>Delete</a>
+
+	</body>
+</html>

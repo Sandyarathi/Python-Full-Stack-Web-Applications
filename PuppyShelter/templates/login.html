@@ -1,6 +1,12 @@
 <!DOCTYPE html>
-<html>
+<!-- CSS class full applies an image in the background -->
+<html class="full">
+
 <head>
+  <!-- Loading Bootstrap CSS for UI styling -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}"></link>
+  <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.css') }}"></link>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"></link>
 	<!--LOAD PRE-REQUISITES FOR GOOGLE SIGN IN -->
    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
   </script>
@@ -10,6 +16,20 @@
 <!-- END PRE-REQUISITES FOR GOOGLE SIGN IN -->
 </head>
 <body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-sm-12">
+        <div class="panel panel-default panel-transparent">
+          <div class="panel-body">
+            <h1>Puppy Shelter</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+
+
 <!-- GOOGLE PLUS SIGN IN BUTTON-->
 
           
@@ -43,7 +63,7 @@ function signInCallback(authResult) {
         if (result) {
           $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
          setTimeout(function() {
-          window.location.href = "/PuppiesShelter/catalog";
+          window.location.href = "/PuppiesShelter/";
          }, 4000);
           
       } else if (authResult['error']) {

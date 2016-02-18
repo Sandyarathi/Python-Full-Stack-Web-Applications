@@ -1,7 +1,4 @@
 from flask import Flask, render_template, request, redirect,jsonify, url_for, flash
-app = Flask(__name__)
-
-
 from datetime import datetime
 from datetime import timedelta
 from sqlalchemy import create_engine, asc
@@ -19,16 +16,72 @@ from flask import make_response
 import requests
 from functools import wraps
 
+# Initialize flask application with templates
+app = Flask(__name__, template_folder='templates')
+
+# Read the client_secrets.json file to get the client_id for google Sign-in
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "PuppiesShelter"
 
-#Connect to Database and create database session
+# Create SQLite db with name puppyshelter.db
 engine = create_engine('sqlite:///puppyshelter.db')
 Base.metadata.bind = engine
 
+# Connect to Database and create database session
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+# Defines the folder where uploaded images may be stored
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'
+
+# Defines max size of image uploads < 5MB
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+# Decorator function to check pre-conditions for certain functions
+def login_required(func):
+  """ Decorator function that ensures user login before create, 
+      update or delete operations.
+      Args: 
+        func: Function to decorate.
+  """
+  @wraps(func)
+  def function_wrapper(*args, **kwargs):
+    if 'username' not in login_session:
+      flash('Please login to add or edit puppies.')
+      return showLogin()
+    return func(*args, **kwargs)
+  return function_wrapper
+
+
+# This method takes the login_session object and creates a new user in the
+# database
+# Returns the id of newly created user
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+# Retreives the user information from User table in database based on user id
+# Returns an object of User instance
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+# Based on email provided, it queries the database for the user having same
+# email.
+# Returns user id if found a user, other returns None
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+
+
 @app.route('/PuppiesShelter/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -108,19 +161,15 @@ def gconnect():
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
+    login_session['provider'] = 'google'
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    loginUser= getUserID(login_session['email'])
+    if not loginUser:
+      loginUser = createUser(login_session)
+    login_session['user_id'] = loginUser
+    output = 'Successfully logged in!'
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
-    newUser = User(name= login_session['username'], email= login_session['email'],imageURL =login_session['picture'])
-    session.add(newUser)
-    session.commit()
     return output
 
 @app.route('/PuppiesShelter/gdisconnect')
@@ -148,173 +197,208 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-def login_required(func):
-  """ Decorator function that ensures user login before create, 
-      update or delete operations.
+@app.route('/PuppiesShelter/disconnect')
+def disconnect():
+  if 'provider' in login_session:
+    if login_session['provider'] == 'google':
+      gdisconnect()
+      del login_session['gplus_id']
+      del login_session['credentials']
+      del login_session['username']
+      del login_session['email']
+      del login_session['picture']
+      del login_session['user_id']
+      del login_session['provider']
+      flash("You have successfully been logged out.")
+      return redirect(url_for('showLogin'))
+  else:
+    flash("You were not logged in")
+    return redirect(url_for('showLogin'))
 
-      Args: 
-        func: Function to decorate.
-  """
-  @wraps(func)
-  def function_wrapper(*args, **kwargs):
+# Checks for allowed file extensions
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+# Check if user has logged in or not
+@app.route('/checkLoggedIn')
+def checkLoggedIn():
     if 'username' not in login_session:
-      flash('Please login to add or edit puppies.')
-      return redirect(url_for('showCatalog'))
-    return func(*args, **kwargs)
-  return function_wrapper
+        return jsonify(loggedIn=False)
+    else:
+        if request.args.get('state') != login_session['state']:
+            return jsonify(loggedIn=False)
+        return jsonify(loggedIn=True)
 
+# Handles any request which is of the
+# pattern <serverdomain:port>/ or <serverdomain:port>/index
+# Checks if the valid login session exists, then renders the index.html page
+# from templates folder and replaces STATE, USERNAME, PICTURE according to
+# context variables being set in render_template method arguments
+'''@app.route('/')
+@app.route('/index')
+@login_required
+def index():
+    return render_template(
+        'index.html',
+        STATE=login_session['state'],
+        USERNAME=login_session['username'],
+        PICTURE=login_session['picture'])'''
 
 # To show home page shelters & puppies
 @app.route('/PuppiesShelter', methods = ['GET'])
-@app.route('/PuppiesShelter/catalog/', methods = ['GET'])
+@app.route('/PuppiesShelter/', methods = ['GET'])
 def showCatalog():
   print "in show catalog"
   shelters = session.query(Shelter).order_by(asc(Shelter.name))
   sixMonthsAgo = datetime.now() - timedelta(weeks=12)
   puppies = session.query(Puppy).filter(Puppy.dateOfBirth > sixMonthsAgo).order_by("dateOfBirth desc")
-  #return render_template('catalog.html', shelters=shelters, puppies = puppies)
-  return jsonify(Shelters =[a.serialize for a in shelters], Puppies = [p.serialize for p in puppies])
+  return render_template('index.html', shelters=shelters, puppies = puppies)
+  #return jsonify(Shelters =[a.serialize for a in shelters], Puppies = [p.serialize for p in puppies])
 
 #To Show a shelter
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/',methods = ['GET'])
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppies/', methods = ['GET'])
+@app.route('/PuppiesShelter/shelter/<int:shelter_id>/all',methods = ['GET'])
+@app.route('/PuppiesShelter/shelter/<int:shelter_id>/puppies/', methods = ['GET'])
 def showShelterAllPuppies(shelter_id):
     shelter = session.query(Shelter).filter_by(id = shelter_id).one()
     puppies = session.query(Puppy).filter_by(shelter_id = shelter_id).all()
-    #return render_template('viewShelterPuppys.html', shelter=shelter, puppies= puppies)
-    return jsonify(Puppies=[i.serialize for i in puppies])
+    return render_template('viewShelterPuppies.html', shelter=shelter, puppies= puppies)
+    #return jsonify(Puppies=[i.serialize for i in puppies])
 
 #View a puppy description
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/', methods = ['GET'])
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/description/', methods = ['GET'])
-def showPuppyDescription(shelter_id,puppy_id):
+@app.route('/PuppiesShelter/puppy/<int:puppy_id>/', methods = ['GET'])
+def showPuppyDescription(puppy_id):
   puppy = session.query(Puppy).filter_by(id = puppy_id).one()
   #return render_template('viewPuppyDescription.html', puppy=puppy)
   return jsonify(Puppy = puppy.serialize)
 
 
-#Create a new shelter
-@app.route('/PuppiesShelter/catalog/shelter/new/', methods = ['POST'])
-@login_required
-def newShelter():
-  if request.method == 'POST':
-    if not ('name' in request.json):
-      response = jsonify({'result': 'ERROR'})
-      response.status_code = 400
-      return response
-    else:
-      newCol = Shelter(name= request.json['name'],
-        address = request.json['address'],
-        city = request.json['city'],
-        state = request.json['state'],
-        zipCode = request.json['zipCode'],
-        website = request.json['website'],
-        maxCapacity = request.json['maxCapacity'],
-        owner_id=login_session['user_id'])
-      session.add(newCol)
-      session.commit()
-      flash("New Shelter Added!")
-      return jsonify(NewShelter = newCol.serialize)
-
-#Edit a shelter
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/edit/', methods=['GET','POST'])
-@login_required
-def editShelter(shelter_id):
-  editedShelter = session.query(Shelter).filter_by(id = shelter_id).one()
-  if editedShelter.owner_id != login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this collection.');}</script><body onload='myFunction()'>")
-  if request.method == 'POST':
-    if ('name' in request.json):
-      editedShelter.name = request.json['name']
-    if('address' in request.json):
-      editedShelter.address = request.json['address']
-    if('city' in request.json):
-      editedShelter.city = request.json['city']
-    if('state' in request.json):
-      editedShelter.state = request.json['state']
-    if('zipCode' in request.json):
-      editedShelter.zipCode = request.json['zipCode']
-    if('website' in request.json):
-      editedShelter.website = request.json['website']
-    if('maxCapacity' in request.json):
-      editedShelter.maxCapacity = request.json['maxCapacity']
-    session.add(editedShelter)
-    session.commit()
-    return jsonify(EditedShelter = editedShelter.serialize)
-
-#Delete a shelter
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/delete/', methods = ['GET','POST'])
-@login_required
-def deleteShelter(shelter_id):
-  colToDelete = session.query(Shelter).filter_by(id=shelter_id).one()
-  if editedShelter.owner_id != login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this collection.');}</script><body onload='myFunction()'>")
-  if request.method == 'POST':
-    session.delete(colToDelete)
-    session.commit()
-    return jsonify(DeletedShelter = colToDelete.serialize)
-
-#Create a new puppy
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/new/', methods = ['GET','POST'])
+#Add a new puppy
+@app.route('/PuppiesShelter/shelter/<int:shelter_id>/puppy/new/', methods = ['GET','POST'])
 @login_required
 def newPuppy(shelter_id):
-  if 'username' not in login_session:
-        return redirect('/PuppiesShelter/login')
   if(request.method == 'POST'):
-    newPuppy = Puppy(name = request.json['name'],
-      gender = request.json['gender'],
-      dateOfBirth = request.json['dateOfBirth'],
-      breed = request.json['breed'],
-      picture = request.json['picture'],
-      shelter_id=shelter_id,
-      weight=request.json['weight'])
-    session.add(newPuppy)
-    session.commit()
-    return jsonify(NewPuppy = newPuppy.serialize)
+    try:
+      image_src = ''
+      if 'file' in request.files:
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = time.strftime("%Y%m%d-%H%M%S") + \
+                secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            image_src = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+      shelter = session.query(Shelter).filter_by(id=shelter_id).one()
+      newPuppy = Puppy(name = request.json['name'],
+        gender = request.form['gender'],
+        dateOfBirth = request.form['dateOfBirth'],
+        breed = request.form['breed'],
+        picture = image_src,
+        shelter=shelter,
+        weight=request.form['weight'],
+        owner_id=login_session['user_id'])
+      session.add(newPuppy)
+      session.commit()
+      return jsonify(added = True, msg='Record added!')
+    except Exception, e:
+      print str(e)
+      return jsonify(added = False, msg='Error occured while adding!')
+  else:
+    return render_template('')
+
 
 #Edit an puppy
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/edit/', methods =['GET','POST'])
+@app.route('/PuppiesShelter/shelter/<int:shelter_id>/puppy/<int:puppy_id>/edit/', methods =['GET','POST'])
 @login_required
 def editPuppy(shelter_id,puppy_id):
-  editedPuppy = session.query(Puppy).filter_by(id=puppy_id).one()
-  shelter = session.query(Shelter).filter_by(id=shelter_id).one()
-  if shelter.owner_id!= login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-                "to edit this record.');}</script><body onload='myFunction()'>")
   if(request.method == 'POST'):
-    if 'name' in request.json:
-      editedPuppy.name = request.json['name']
-    if 'gender' in request.json:
-      editedPuppy.gender = request.json['gender']
-    if 'dateOfBirth' in request.json:
-      editedPuppy.dateOfBirth = request.json['dateOfBirth']
-    if 'breed' in request.json:
-      editedPuppy.breed= request.json['breed']
-    if 'picture' in request.json:
-      editedPuppy.picture = request.json['picture']
-    if 'weight' in request.json:
-      editedPuppy.weight = request.json['weight']
-    session.add(editedPuppy)
-    session.commit()
-    return jsonify(EditedPuppy = editedPuppy.serialize)
+    try:
+      image_src = ''
+      if ('file' in request.files):
+          file = request.files['file']
+          if (file and file.filename != '' and
+                  allowed_file(file.filename)):
+              # adding timestring to filename to prevent any
+              # duplicate file uploads
+              filename = time.strftime("%Y%m%d-%H%M%S") + \
+                  secure_filename(file.filename)
+              file.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                     filename))
+              image_src = os.path.join(app.config['UPLOAD_FOLDER'],
+                                       filename)
+      if 'name' in request.form:
+        puppyName = request.form['name']
+      if 'gender' in request.form:
+        puppyGender = request.form['gender']
+      if 'dateOfBirth' in request.form:
+        puppyDOB = request.form['dateOfBirth']
+      if 'breed' in request.form:
+        puppyBreed= request.form['breed']
+      if 'weight' in request.json:
+        puppyWeight = request.json['weight']
+      editedPuppy = session.query(Puppy).filter(and_(Puppy.shelter_id == shelter_id,
+      Puppy.id == puppy_id, Puppy.user_id == login_session['user_id'] )).one()
+      if editedPuppy:
+        if image_src:
+          editedPuppy.name = puppyName
+          editedPuppy.gender = puppyGender
+          editedPuppy.dateOfBirth = puppyDOB
+          editedPuppy.breed= puppyBreed
+          editedPuppy.weight = puppyWeight
+          editedPuppy.owner_id=login_session['user_id']
+          if editedPuppy.image_src:
+            os.remove(editedPuppy.image_src)
+          editedPuppy.image_src = image_src
+        else:
+          editedPuppy.name = puppyName
+          editedPuppy.gender = puppyGender
+          editedPuppy.dateOfBirth = puppyDOB
+          editedPuppy.breed= puppyBreed
+          editedPuppy.weight = puppyWeight
+          editedPuppy.owner_id=login_session['user_id']
+        session.add(editedPuppy)
+        session.commit()
+        return jsonify(updated=True, msg='Record updated')
+      else:
+        return jsonify(updated=False, mesg ='No such record exists')
+    except Exception, e:
+      print str(e)
+      return jsonify(updated=False, masg ='An error occured while trying to update record')
+  else:
+    return jsonify(updated=False, masg ='Error in request method')
+
+
 
 #Delete an puppy
-@app.route('/PuppiesShelter/catalog/shelter/<int:shelter_id>/puppy/<int:puppy_id>/delete/', methods =['GET','POST'])
+@app.route('/PuppiesShelter/shelter/<int:shelter_id>/puppy/<int:puppy_id>/delete/', methods =['GET','POST'])
 @login_required
 def deletePuppy(shelter_id, puppy_id):
-  puppyToDelete = session.query(Puppy).filter_by(id=puppy_id).one()
-  shelter = session.query(Shelter).filter_by(id=shelter_id).one()
-  if shelter.owner_id!= login_session['user_id']:
-    return ("<script>function myFunction() {alert('You are not authorized "
-                "to delete this record.');}</script><body onload='myFunction()'>")
-  if request.method == 'POST':
-      session.delete(puppyToDelete)
-      session.commit()
-      return jsonify(DeletedPuppy = puppyToDelete.serialize)
-
-
+  if photoToDelete.user_id != login_session['user_id']:
+      return ("<script>function myFunction() {alert('You are not authorized "
+                "to delete this photo. Please delete from your own "
+                " collection.');}</script><body onload='myFunction()'"
+                ">")
+  if(request.method == 'POST'):
+    try:
+      puppyToDelete = session.query(Puppy).filter(
+        and_(Puppy.shelter_id==shelter_id,
+          Puppy.id==puppy_id,
+          Puppy.owner_id==login_session['user_id'])).one()
+      if puppyToDelete:
+        if puppyToDelete.image_src:
+          img_src = puppyToDelete.image_src
+          session.delete(puppyToDelete)
+          session.commit()
+        if img_src:
+          os.remove(img_src)
+        return jsonify(deleted=True, msg ='Record has been deleted')
+      else:
+        return jsonify(deleted=False, msg ='No record to delete')
+    except Exception, e:
+      print str(e)
+      return jsonify(deleted=False, msg ='An error occured while trying to delete record.')
+  else:
+    return jsonify(deleted=False, msg ='Error in request method')
 
 
 if __name__ == '__main__':

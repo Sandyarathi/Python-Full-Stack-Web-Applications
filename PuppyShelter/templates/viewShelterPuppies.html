@@ -1,0 +1,23 @@
+<html>
+	<body>
+		<h1>{{ shelter.name }}</h1>
+		</br>
+		{{shelter.address}}
+		{{shelter.city}}
+		{{shelter.state}}
+		{{shelter.zipCode}}
+		</br>
+		{{shelter.website}}
+		{{shelter.currentoccupancy}}
+		</br></br>
+			{% for p in puppies %}
+		<img HEIGHT=100 WIDTH=100 src={{p.image_src}}>
+		</br>
+			<a href = '{{ url_for('showPuppyDescription', puppy_id = p.id)}}'>{{p.name}}</a>
+		</br>
+			{% endfor %}
+		</br>
+		<a href= '{{ url_for('newPuppy', shelter_id = shelter.id)}}'>Add New Puppy</a>
+		
+	</body>
+</html>

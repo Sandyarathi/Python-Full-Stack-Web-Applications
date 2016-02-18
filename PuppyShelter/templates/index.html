@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+	<body>
+	<div class="col-md-2 text-right">
+			<a href="{{url_for('showLogin')}}">Click Here to Log in </a>
+		</div>
+		<h1>CATALOG</h1>
+		</br>
+		<h2>Shelter</h2>
+			{%with messages = get_flashed_messages() %}
+		{% if messages %}
+			<ul>
+			{% for message in messages%}
+				<li> <strong> {{message}} </strong></li>
+			{% endfor %}
+			</ul>
+			{% endif %}
+			{% endwith %}
+			{% for s in shelters %}
+			<a href = '{{ url_for('showShelterAllPuppies', shelter_id = s.id)}}'>{{s.name}}</a>
+		</br>
+
+		</br></br>
+			{% endfor %}
+		<h2>Puppies:</h2>
+			{% for p in puppies%}
+		<img HEIGHT=100 WIDTH=100 src={{p.image_src}}>
+		</br>
+			<a href = '{{ url_for('showPuppyDescription', puppy_id = p.id)}}'>{{p.name}}</a>
+		</br>
+			{{p.gender}}
+			{{p.breed}}
+		</br>
+			{% endfor %}
+		</br>
+	</body>
+</html>

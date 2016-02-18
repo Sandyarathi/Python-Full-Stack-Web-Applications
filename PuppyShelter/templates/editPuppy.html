@@ -1,0 +1,25 @@
+<html>
+<body>
+<form action= "{{url_for('editPuppy', shelter_id = puppy.shelter_id, puppy_id=puppy.id)}}" method = 'POST'>
+
+<p>Name:</p>
+<input type = 'text' size='30' name = 'name' placeholder = '{{puppy.name}}'>
+</br>
+<p>Gender:</p>
+<input type = 'text' size='100' name = 'gender' placeholder = '{{puppy.gender}}'>
+</br>
+<p>Breed:</p>
+<input type = 'text' size='100' name = 'breed' placeholder = '{{puppy.breed}}'>
+</br>
+<p>Birth date:</p>
+<input type = 'date' name = 'birthDate' placeholder = '{{puppy.dateOfBirth}}'>
+</br>
+<p>ImageURL:</p>
+<input type = 'text' size='100' name = 'imagesrc' placeholder = '{{puppy.image_src}}'>
+</br></br>
+<input type='submit' value='Edit'>
+
+<a href= '{{url_for('showPuppyDescription', shelter_id= puppy.shelter_id, puppy_id= puppy.id)}}'>Cancel</a>
+</form>
+</body>
+</html>

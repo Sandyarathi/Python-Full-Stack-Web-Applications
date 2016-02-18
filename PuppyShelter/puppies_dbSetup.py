@@ -7,6 +7,7 @@ from sqlalchemy import func
  
 Base = declarative_base()
 
+# Definition of User Table
 class User(Base):
     __tablename__ = 'user'
     """ Table for user information.
@@ -14,26 +15,31 @@ class User(Base):
         id: Unique user id.
         name: Name of the user.
         email: E-Mail of the user.
-        imageURL: path to profile picture.
+        picture: path to profile picture.
     """
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
-    imageURL = Column(String())
+    picture = Column(String())
 
-PuppyAdopter = Table('PuppyAdopter', Base.metadata,
-    Column('puppyId', Integer(), ForeignKey('puppy.id')),
-    Column('adopterId', Integer(), ForeignKey('adopter.id')))
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'email': self.email,
+            'picture': self.picture,
+            'id': self.id
+        }
+    
 
-
+# Definition of shelter table
 class Shelter(Base):
     __tablename__ = 'shelter'
     """ Table for shelter collections.
     Columns:
         id: Unique collection id.
         name: Name of the collection.
-        owner_id: user who created the collection.
 
     """
     id = Column(Integer, primary_key = True)
@@ -48,8 +54,9 @@ class Shelter(Base):
     def currentOccupancy(self):
         return func.count('1')
     puppies = relationship('Puppy', backref = 'shelterPuppies', cascade = 'delete')
-    owner_id=Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+    
 
     # Decorator method
     @property
@@ -67,7 +74,8 @@ class Shelter(Base):
             'state': self.state,
             'website': self.website,
             'currentOccupancy': self.currentOccupancy,
-            'owner': self.user.name
+            'user_id':self.user_id
+            
         }
 
 
@@ -83,17 +91,19 @@ class Puppy(Base):
         name: Puppy name.
         shelter_id: Shelter in which Puppy resides.
         picture: filename or external path to the image file.
+        owner_id: user who created the collection.
     """
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     gender = Column(String(6), nullable = False)
     dateOfBirth = Column(Date)
     breed = Column(String(250))
-    picture = Column(String)
+    image_src = Column(String)
     shelter_id = Column(Integer, ForeignKey('shelter.id'))
     shelter = relationship(Shelter)
     weight = Column(Numeric(10))
-    adopters = relationship('Adopter', secondary = PuppyAdopter, backref = 'puppies')
+    owner_id=Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
      # Decorator method
     @property
@@ -110,34 +120,17 @@ class Puppy(Base):
             'gender': self.gender,
             'dateOfBirth': str(self.dateOfBirth),
             'breed': self.breed,
-            'picture': self.picture,
-            'shelter':self.shelter.name
+            'image_src': self.image_src,
+            'shelter':self.shelter.name,
+            'owner': self.user.name
             
         }
 
 
-class Adopter(Base):
-    __tablename__ = 'adopter'
-    id = Column(Integer, primary_key = True)
-    name = Column(String, nullable = False)
-    address = Column(String(250))
-    city = Column(String(80))
-    state = Column(String(20))
-    zipCode = Column(String(10))
-    
-
-class PuppyProfile(Base):
-    __tablename__ = 'puppy_profile'
-    id = Column(Integer, primary_key = True)
-    puppy_id = Column(Integer, ForeignKey('puppy.id'))
-    picture = Column(String)
-    description = Column(String)
-    puppy = relationship(Puppy)
 
 
 
-
-engine = create_engine('sqlite:///puppyshelter.db', echo=True)
+engine = create_engine('sqlite:///puppyshelter.db')
  
 
 Base.metadata.create_all(engine)
