@@ -30,20 +30,21 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 @app.route('/login')
 def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
-    login_session['state'] = state
-    # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state)
+  '''User login method.'''
+  state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+  login_session['state'] = state
+  # return "The current session state is %s" % login_session['state']
+  return render_template('login.html', STATE=state)
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    # Validate state token
-    if request.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state parameter.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+  '''Login method to handle Google OAuth.'''
+  # Validate state token
+  if request.args.get('state') != login_session['state']:
+    response = make_response(json.dumps('Invalid state parameter.'), 401)
+    response.headers['Content-Type'] = 'application/json'
+    return response
     # Obtain authorization code
     code = request.data
 
@@ -125,17 +126,19 @@ def gconnect():
 
 
 def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session[
+  '''Method to create a new user record when a new user logs in to the application.'''
+  newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
+  session.add(newUser)
+  session.commit()
+  user = session.query(User).filter_by(email=login_session['email']).one()
+  return user.id
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
+  '''Retrieve user information from user model'''
+  user = session.query(User).filter_by(id=user_id).one()
+  return user
 
 
 def getUserID(email):
@@ -148,35 +151,36 @@ def getUserID(email):
 
 @app.route('/gdisconnect')
 def gdisconnect():
-        # Only disconnect a connected user.
-    credentials = login_session.get('credentials')
-    if credentials is None:
-        response = make_response(
-            json.dumps('Current user not connected.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    access_token = credentials.access_token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
-    h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
+  '''Google disconnect method to log out.'''
+    # Only disconnect a connected user.
+  credentials = login_session.get('credentials')
+  if credentials is None:
+      response = make_response(
+          json.dumps('Current user not connected.'), 401)
+      response.headers['Content-Type'] = 'application/json'
+      return response
+  access_token = credentials.access_token
+  url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
+  h = httplib2.Http()
+  result = h.request(url, 'GET')[0]
 
-    if result['status'] == '200':
-        # Reset the user's sesson.
-        del login_session['credentials']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
+  if result['status'] == '200':
+      # Reset the user's sesson.
+      del login_session['credentials']
+      del login_session['gplus_id']
+      del login_session['username']
+      del login_session['email']
+      del login_session['picture']
 
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
-        # For whatever reason, the given token was invalid.
-        response = make_response(
-            json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
+      response = make_response(json.dumps('Successfully disconnected.'), 200)
+      response.headers['Content-Type'] = 'application/json'
+      return response
+  else:
+      # For whatever reason, the given token was invalid.
+      response = make_response(
+          json.dumps('Failed to revoke token for given user.', 400))
+      response.headers['Content-Type'] = 'application/json'
+      return response
 
 def login_required(func):
   """ Decorator function that ensures user login before create, 
@@ -195,23 +199,52 @@ def login_required(func):
   return function_wrapper
 
 
+
+# JSON APIs to view albums
+@app.route('/album/<int:album_id>/JSON')
+def albumPhotosJSON(album_id):
+  albums = session.query(Album).filter_by(id = album_id).one()
+  photos= session.query(Photo).filter_by(album_id=album_id).all()
+  return jsonify(Photos=[p.serialize for p in photos])
+
+@app.route('/album/<int:album_id>/<int:photo_id>/JSON')
+def photoJSON(album_id, photo_id):
+    photo = session.query(Photo).filter_by(id = photo_id).one()
+    return jsonify(photo = photo.serialize)
+
+@app.route('/album/JSON')
+def albumsJSON():
+    albums = session.query(Album).all()
+    return jsonify(albums = [i.serialize for i in albums])
+    
+
+
+
 # To show home page albums & photos
 @app.route('/catalog/', methods = ['GET'])
 def showCatalog():
+  '''Method to display contents of the home page of SnapShare application!'''
   print "in show catalog"
   albums = session.query(Album).order_by(asc(Album.name))
   photos = session.query(Photo).order_by(asc(Photo.year))
   #return render_template('catalog.html', albums=albums, photos = photos)
-  return jsonify(Albums =[a.serialize for a in albums], Photos = [p.serialize for p in photos])
+  #return jsonify(Albums =[a.serialize for a in albums], Photos = [p.serialize for p in photos])
+  if 'username' not in login_session:
+    return render_template('publicCatalog.html', albums=albums, photos = photos )
+  else:
+    return render_template('catalog.html', albums=albums, photos = photos)
 
-#To Show a album
+
+#To Show an album
 @app.route('/catalog/album/<int:album_id>/',methods = ['GET'])
 @app.route('/catalog/album/<int:album_id>/photos/', methods = ['GET'])
 def showAlbumAllPhotos(album_id):
+  '''Method to display photos corresponding to a particular album'''
   try:
     album = session.query(Album).filter_by(id = album_id).first()
     if album:
       photos = session.query(Photo).filter_by(album_id = album_id).all()
+      creator = getUserInfo(album.user_id)
       if photos != []:
         #return render_template('viewAlbumPhotos.html', album=album, photos= photos)
         return jsonify(Photos=[p.serialize for p in photos])
@@ -227,6 +260,7 @@ def showAlbumAllPhotos(album_id):
 @app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/', methods = ['GET'])
 @app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/description/', methods = ['GET'])
 def showPhotoDescription(album_id,photo_id):
+  '''Method to view the description of a particular photo.'''
   try:
     album= session.query(Album).filter_by(id= album_id).first()
     if album:
@@ -249,6 +283,7 @@ def showPhotoDescription(album_id,photo_id):
 @app.route('/catalog/album/new/', methods = ['POST'])
 @login_required
 def newAlbum():
+  '''Method to create a new album in the catalog'''
   if request.method == 'POST':
     try:
       newCol = Album(name= request.json['name'],
@@ -256,16 +291,19 @@ def newAlbum():
       session.add(newCol)
       session.commit()
       flash("New Album Added!")
-      return jsonify(added=True, NewAlbum = newCol.serialize)
+      #return jsonify(added=True, NewAlbum = newCol.serialize)
+      return redirect(url_for('showCatalog'))
     except Exception, e:
       print str(e)
       return jsonify(added = False, msg='Unable to add!')
   else:
-    return jsonify(added = False, masg='Exited from request method!')
+    #return jsonify(added = False, masg='Exited from request method!')
+    return render_template('newAlbum.html')
 #Edit a album
 @app.route('/catalog/album/<int:album_id>/edit/', methods=['GET','POST'])
 @login_required
 def editAlbum(album_id):
+  '''Method to edit the attributes of an album.'''
   if request.method == 'POST':
     try:
       editedAlbum = session.query(Album).filter_by(id = album_id).one()
@@ -278,19 +316,22 @@ def editAlbum(album_id):
             editedAlbum.name = request.json['name']
             session.add(editedAlbum)
             session.commit()
-            return jsonify(updated=True, EditedAlbum = editedAlbum.serialize, msg='Record has been updated!')
+            #return jsonify(updated=True, EditedAlbum = editedAlbum.serialize, msg='Record has been updated!')
+            return redirect(url_for('showCatalog'))
       else:
         return jsonify(updated=False, msg='No such album exists!')
     except Exception, e:
       print str(e)
       return jsonify(EditedAlbum = editedAlbum.serialize, updated=False, msg='An error occured while trying to update!')
   else:
-    return jsonify(updated=False, msg='An error occured while updating!')
+    #return jsonify(updated=False, msg='An error occured while updating!')
+    return render_template('editAlbum.html', album = editedAlbum)
 
 #Delete a album
 @app.route('/catalog/album/<int:album_id>/delete/', methods = ['GET','POST'])
 @login_required
 def deleteAlbum(album_id):
+  '''Method to delete a particular album.'''
   if request.method == 'POST':
     try:
       colToDelete = session.query(Album).filter_by(id=album_id).one()
@@ -302,19 +343,22 @@ def deleteAlbum(album_id):
                 ">")
         session.delete(colToDelete)
         session.commit()
-        return jsonify(deleted=True, msg='Record has been deleted!')
+        #return jsonify(deleted=True, msg='Record has been deleted!')
+        return redirect(url_for('showcatalog', album_id=album_id))
       else:
         return jsonify(deleted=False, msg='No such Album exists!')
     except Exception, e:
       print str(e)
       return jsonify(deleted=False, msg='An error occured while trying to delete!')
   else:
-    return jsonify(deleted=False, msg='An error occured while deleting!')
+    #return jsonify(deleted=False, msg='An error occured while deleting!')
+    return render_template('deleteAlbum.html', album = colToDelete)
 
 #Create a new photo
 @app.route('/catalog/album/<int:album_id>/photo/new/', methods = ['GET','POST'])
 @login_required
 def newPhoto(album_id):
+  '''Method to add a new photo to an album.'''
   if(request.method == 'POST'):
     try:
       newPhoto = Photo(name = request.json['name'],
@@ -337,6 +381,7 @@ def newPhoto(album_id):
 @app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/edit/', methods =['GET','POST'])
 @login_required
 def editPhoto(album_id,photo_id):
+  '''Method to edit the attributes of a Photo in an album.'''
   if(request.method == 'POST'):
     try:
       editedPhoto = session.query(Photo).filter_by(id=photo_id).one()
@@ -372,6 +417,7 @@ def editPhoto(album_id,photo_id):
 @app.route('/catalog/album/<int:album_id>/photo/<int:photo_id>/delete/', methods =['GET','POST'])
 @login_required
 def deletePhoto(album_id, photo_id):
+  '''Method to delete a photo from the album.'''
   if request.method == 'POST':
     try:
       photoToDelete = session.query(Photo).filter_by(id=photo_id).one()
